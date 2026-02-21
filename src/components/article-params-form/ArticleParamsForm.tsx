@@ -1,4 +1,4 @@
-import { MouseEvent, useCallback } from 'react';
+import { MouseEvent, useCallback, useEffect, useRef } from 'react';
 import clsx from 'clsx';
 
 import {
@@ -43,6 +43,27 @@ export const ArticleParamsForm = ({
 	onApply,
 	onReset,
 }: ArticleParamsFormProps) => {
+	const sidebarRef = useRef<HTMLElement | null>(null);
+
+	useEffect(() => {
+		if (!isOpen) return;
+
+		const handleDocumentMouseDown = (event: globalThis.MouseEvent) => {
+			const target = event.target as Node | null;
+
+			if (!target) return;
+			if (sidebarRef.current && !sidebarRef.current.contains(target)) {
+				onClose();
+			}
+		};
+
+		document.addEventListener('mousedown', handleDocumentMouseDown);
+
+		return () => {
+			document.removeEventListener('mousedown', handleDocumentMouseDown);
+		};
+	}, [isOpen, onClose]);
+
 	const handleSidebarClick = (e: MouseEvent) => {
 		e.stopPropagation();
 	};
@@ -68,9 +89,8 @@ export const ArticleParamsForm = ({
 		<>
 			<ArrowButton isOpen={isOpen} onClick={onToggle} />
 
-			{isOpen && <div className={styles.overlay} onClick={onClose} />}
-
 			<aside
+				ref={sidebarRef}
 				className={clsx(styles.container, isOpen && styles.container_open)}
 				onClick={handleSidebarClick}>
 				<form
